@@ -1,0 +1,39 @@
+@{
+    ViewData["Title"] = "Team Builder Pokémon";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Team Builder Pokémon</h1>
+    <p class="lead">
+        Monte uma equipe de ate 6 Pokemon e veja na hora quais tipos de
+        ataque sao fraqueza ou resistencia do time inteiro, com sugestoes de
+        quem adicionar pra cobrir os buracos.
+    </p>
+
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <a asp-controller="Teams" asp-action="Index" class="btn btn-primary btn-lg">Ver minhas equipes</a>
+    }
+    else
+    {
+        <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-primary btn-lg">Criar conta</a>
+        <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-outline-primary btn-lg">Entrar</a>
+    }
+</div>
+
+<hr />
+
+<div class="row mt-4">
+    <div class="col-md-4">
+        <h3>36 Pokemon, 18 tipos</h3>
+        <p>O catalogo cobre os 18 tipos que existem, de Bulbasaur a Gible, entao qualquer combinacao de equipe tem uma analise que faz sentido.</p>
+    </div>
+    <div class="col-md-4">
+        <h3>Analise automatica</h3>
+        <p>Cada equipe e avaliada contra os 18 tipos de ataque: quantos membros sao fracos, resistentes ou imunes a cada um, e o que fazer a respeito.</p>
+    </div>
+    <div class="col-md-4">
+        <h3>Mesma formula do simulador de batalha</h3>
+        <p>A tabela de efetividade de tipos e a mesma usada no meu Simulador de Batalha Pokemon em Python, portada pra C#.</p>
+    </div>
+</div>

@@ -1,0 +1,91 @@
+@model Team
+@{
+    ViewData["Title"] = $"Equipe: {Model.Name}";
+    var analysis = ViewBag.Analysis as TeamAnalysisResult;
+}
+
+<h1>@Model.Name</h1>
+<p class="text-muted">Criada em @Model.CreatedAtUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</p>
+
+<h2>Pokemon da equipe</h2>
+<div class="row mb-4">
+    @foreach (var slot in Model.Slots.OrderBy(s => s.SlotNumber))
+    {
+        <div class="col-md-2 col-sm-4 col-6 mb-2">
+            <div class="card text-center">
+                <div class="card-body">
+                    <strong>@slot.Pokemon?.Name</strong>
+                    <br />
+                    <small class="text-muted">@string.Join("/", slot.Pokemon?.GetTypes() ?? Array.Empty<string>())</small>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<h2>Analise de tipos</h2>
+
+@if (analysis is null)
+{
+    <p>Nao foi possivel calcular a analise desta equipe.</p>
+}
+else
+{
+    <p class="text-muted">
+        Fraqueza: mais da metade da equipe toma dano dobrado (ou mais) desse tipo de ataque.
+        Fraqueza critica: dois tercos ou mais da equipe.
+        Resistencia: mais da metade da equipe recebe dano reduzido.
+    </p>
+
+    <div class="table-responsive">
+        <table class="table table-sm table-bordered align-middle">
+            <thead>
+                <tr>
+                    <th>Tipo de ataque</th>
+                    <th>Fracos</th>
+                    <th>Resistentes</th>
+                    <th>Imunes</th>
+                    <th>Situacao</th>
+                    <th>Sugestoes pra cobrir a fraqueza</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var matchup in analysis.Matchups)
+                {
+                    var rowClass = matchup.IsCriticalWeakness ? "table-danger"
+                        : matchup.IsWeakness ? "table-warning"
+                        : matchup.IsResistance ? "table-success"
+                        : "";
+
+                    <tr class="@rowClass">
+                        <td>@matchup.Type</td>
+                        <td>@matchup.WeakCount</td>
+                        <td>@matchup.ResistantCount</td>
+                        <td>@matchup.ImmuneCount</td>
+                        <td>
+                            @if (matchup.IsCriticalWeakness)
+                            {
+                                <span>Fraqueza critica</span>
+                            }
+                            else if (matchup.IsWeakness)
+                            {
+                                <span>Fraqueza</span>
+                            }
+                            else if (matchup.IsResistance)
+                            {
+                                <span>Resistencia</span>
+                            }
+                            else
+                            {
+                                <span>Equilibrado</span>
+                            }
+                        </td>
+                        <td>@string.Join(", ", matchup.SuggestedPokemon)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+<a asp-action="Index" class="btn btn-secondary">Voltar</a>
