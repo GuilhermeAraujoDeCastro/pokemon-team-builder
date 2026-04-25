@@ -10,14 +10,22 @@ public class Pokemon
 
     public string? Type2 { get; set; }
 
+    /// <summary>Numero na Pokedex nacional; monta a URL do sprite oficial da PokeAPI.</summary>
+    public int? DexNumber { get; set; }
+
     /// <summary>
-    /// Devolve os 1 ou 2 tipos deste Pokemon. E' um metodo, nao uma
-    /// propriedade, de proposito: se fosse uma propriedade do tipo
-    /// IReadOnlyList/List, o EF Core tentaria mapear como se fosse um dado
-    /// a mais da entidade, em vez de so ler Type1/Type2.
+    /// Os 1 ou 2 tipos do Pokemon. Metodo (nao propriedade) pro EF Core nao tentar mapear como coluna.
     /// </summary>
     public IReadOnlyList<string> GetTypes()
     {
         return Type2 is null ? new[] { Type1 } : new[] { Type1, Type2 };
+    }
+
+    /// <summary>Sprite do repositorio publico da PokeAPI (null quando nao sabemos o numero).</summary>
+    public string? GetSpriteUrl()
+    {
+        return DexNumber is null
+            ? null
+            : $"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/{DexNumber}.png";
     }
 }
