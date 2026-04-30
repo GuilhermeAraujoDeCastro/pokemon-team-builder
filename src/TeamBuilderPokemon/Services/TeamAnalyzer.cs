@@ -25,13 +25,25 @@ public class TypeMatchup
 public class TeamAnalysisResult
 {
     public List<TypeMatchup> Matchups { get; set; } = new();
+
+    /// <summary>Pokemon de fora do time que resistem a duas ou mais fraquezas de uma vez.</summary>
+    public List<CoverageSuggestion> CoverageSuggestions { get; set; } = new();
+}
+
+/// <summary>Um Pokemon sugerido e quais fraquezas do time ele cobre.</summary>
+public class CoverageSuggestion
+{
+    public string Name { get; set; } = string.Empty;
+
+    public string? SpriteUrl { get; set; }
+
+    public List<string> Covers { get; set; } = new();
 }
 
 /// <summary>
-/// Analisa um time inteiro (nao um Pokemon so) contra os 18 tipos de ataque,
-/// pra achar fraquezas e resistencias compartilhadas pelo time. Fraqueza:
-/// mais da metade do time toma dano aumentado desse tipo. Fraqueza critica:
-/// dois tercos ou mais. Resistencia: mais da metade toma dano reduzido.
+/// Analisa o time inteiro contra os 18 tipos de ataque.
+/// Fraqueza: mais da metade toma dano aumentado. Critica: dois tercos ou mais.
+/// Resistencia: mais da metade toma dano reduzido.
 /// </summary>
 public static class TeamAnalyzer
 {
@@ -108,6 +120,35 @@ public static class TeamAnalyzer
             result.Matchups.Add(matchup);
         }
 
+        result.CoverageSuggestions = SuggestCoverage(result.Matchups, teamIds, fullRoster);
         return result;
+    }
+
+    /// <summary>
+    /// Cruza as fraquezas: quem resiste a mais fraquezas ao mesmo tempo vem primeiro.
+    /// So entra quem cobre pelo menos duas (uma so ja aparece na tabela por tipo).
+    /// </summary>
+    private static List<CoverageSuggestion> SuggestCoverage(
+        IEnumerable<TypeMatchup> matchups, HashSet<int> teamIds, IReadOnlyList<Pokemon> fullRoster)
+    {
+        var weaknesses = matchups.Where(m => m.IsWeakness).Select(m => m.Type).ToList();
+        if (weaknesses.Count < 2)
+        {
+            return new List<CoverageSuggestion>();
+        }
+
+        return fullRoster
+            .Where(p => !teamIds.Contains(p.Id))
+            .Select(p => new CoverageSuggestion
+            {
+                Name = p.Name,
+                SpriteUrl = p.GetSpriteUrl(),
+                Covers = weaknesses.Where(type => TypeChart.Effectiveness(type, p.GetTypes()) < 1.0).ToList(),
+            })
+            .Where(s => s.Covers.Count >= 2)
+            .OrderByDescending(s => s.Covers.Count)
+            .ThenBy(s => s.Name)
+            .Take(MaxSuggestions)
+            .ToList();
     }
 }
