@@ -1,0 +1,50 @@
+@model BattleViewModel
+@{
+    ViewData["Title"] = $"Batalha: {Model.Team.Name}";
+}
+
+<h1>⚔ Batalha simulada</h1>
+<p class="text-body-secondary">
+    Mesma fórmula de dano do Simulador de Batalha em Python. Como o catálogo só tem tipos (sem stats),
+    todo mundo tem stats iguais e ataca com um golpe do próprio tipo: quem decide a luta é o tipo e o nível.
+</p>
+
+<form asp-action="Battle" asp-route-id="@Model.Team.Id" method="post" class="poke-card p-3 mb-4">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-5">
+            <label class="form-label fw-semibold">Seu time</label>
+            <input class="form-control" value="@Model.Team.Name" disabled />
+        </div>
+        <div class="col-md-5">
+            <label for="opponentId" class="form-label fw-semibold">Adversário</label>
+            <select id="opponentId" name="opponentId" class="form-select">
+                <option value="">Time aleatório do catálogo (Nv. 50)</option>
+                @foreach (var other in Model.OtherTeams)
+                {
+                    <option value="@other.Id">@other.Name</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2 d-grid">
+            <button type="submit" class="btn btn-warning fw-semibold">Lutar!</button>
+        </div>
+    </div>
+</form>
+
+@if (Model.Report is not null)
+{
+    var won = Model.Report.Winner == "A";
+    var draw = Model.Report.Winner == "Empate";
+    <div class="alert @(won ? "alert-success" : draw ? "alert-secondary" : "alert-danger")">
+        <strong>@(won ? $"{Model.Team.Name} venceu!" : draw ? "Empate por limite de turnos." : $"{Model.OpponentName} venceu.")</strong>
+        (@Model.Report.Turns turnos)
+    </div>
+    <div class="battle-log poke-card p-3">
+        @foreach (var line in Model.Report.Log)
+        {
+            <div>@line</div>
+        }
+    </div>
+}
+
+<a asp-action="Details" asp-route-id="@Model.Team.Id" class="btn btn-secondary mt-3">Voltar pro time</a>

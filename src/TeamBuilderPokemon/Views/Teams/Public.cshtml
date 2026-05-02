@@ -1,0 +1,13 @@
+@model Team
+@{
+    ViewData["Title"] = $"Time: {Model.Name}";
+}
+
+<div class="mb-2">
+    <span class="badge text-bg-info mb-2">Time compartilhado</span>
+    <h1 class="mb-0">@Model.Name</h1>
+    <p class="text-body-secondary">Só leitura. Quer montar o seu? <a asp-area="Identity" asp-page="/Account/Register">Crie uma conta</a>.</p>
+</div>
+
+<partial name="_TeamMembers" model="Model" />
+<partial name="_Analysis" model="ViewBag.Analysis as TeamAnalysisResult" />

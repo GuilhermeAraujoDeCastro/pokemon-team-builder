@@ -1,0 +1,33 @@
+@model List<Team>
+@{
+    ViewData["Title"] = "Lixeira";
+}
+
+<h1>🗑 Lixeira</h1>
+<p class="text-body-secondary">Times excluídos ficam aqui até você restaurar ou apagar de vez.</p>
+
+@if (!Model.Any())
+{
+    <div class="poke-card p-4 text-center">A lixeira está vazia.</div>
+}
+else
+{
+    <ul class="list-group">
+        @foreach (var team in Model)
+        {
+            <li class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <span><strong>@team.Name</strong> · excluído em @team.DeletedAtUtc?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
+                <span class="d-flex gap-2">
+                    <form asp-action="Restore" asp-route-id="@team.Id" method="post">
+                        <button type="submit" class="btn btn-sm btn-success">Restaurar</button>
+                    </form>
+                    <form asp-action="Purge" asp-route-id="@team.Id" method="post" onsubmit="return confirm('Apagar de vez? Não dá pra desfazer.');">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Apagar de vez</button>
+                    </form>
+                </span>
+            </li>
+        }
+    </ul>
+}
+
+<a asp-action="Index" class="btn btn-secondary mt-3">Voltar</a>
