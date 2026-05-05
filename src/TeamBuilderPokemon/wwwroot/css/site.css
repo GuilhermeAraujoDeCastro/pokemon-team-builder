@@ -1,22 +1,102 @@
-html {
-  font-size: 14px;
+/* Tema Pokemon por cima do Bootstrap 5.3 (claro/escuro via data-bs-theme no <html>). */
+:root {
+  --poke-red: #e3350d;
+  --poke-red-dark: #b02a0a;
+  --poke-yellow: #ffcb05;
+  --poke-blue: #2a75bb;
+  --card-radius: 16px;
 }
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
-}
+html { font-size: 15px; position: relative; min-height: 100%; }
+@media (min-width: 768px) { html { font-size: 16px; } }
 
 body {
-  margin-bottom: 60px;
+  margin-bottom: 70px;
+  background: var(--bs-body-bg);
+}
+
+/* Fundo com pokebolas bem apagadas. */
+[data-bs-theme="light"] body { background: #f4f6fb radial-gradient(circle at 20px 20px, rgba(227, 53, 13, .05) 6px, transparent 7px) 0 0 / 60px 60px; }
+[data-bs-theme="dark"] body { background: #11151c radial-gradient(circle at 20px 20px, rgba(255, 255, 255, .03) 6px, transparent 7px) 0 0 / 60px 60px; }
+
+.btn:focus-visible, .form-control:focus, .form-check-input:focus, .form-select:focus {
+  box-shadow: 0 0 0 .25rem rgba(42, 117, 187, .45);
+}
+
+/* ---------- navbar estilo Pokedex ---------- */
+.navbar-poke {
+  background: linear-gradient(135deg, var(--poke-red), var(--poke-red-dark));
+  box-shadow: 0 4px 18px rgba(0, 0, 0, .18);
+}
+.navbar-poke .navbar-brand, .navbar-poke .nav-link, .navbar-poke .btn-link { color: #fff !important; }
+.navbar-poke .nav-link:hover { color: var(--poke-yellow) !important; }
+.navbar-poke .navbar-toggler { border-color: rgba(255, 255, 255, .5); }
+.navbar-poke .navbar-toggler-icon { filter: invert(1); }
+
+/* Pokebola desenhada em CSS (sem imagem). */
+.pokeball {
+  display: inline-block; width: 1.4em; height: 1.4em; border-radius: 50%; vertical-align: -.25em;
+  background: linear-gradient(#fff 0 0) center / 100% 2px no-repeat, linear-gradient(var(--poke-red) 50%, #fff 50%);
+  border: 2px solid #1d1d1d; position: relative; margin-right: .35em;
+}
+.pokeball::after {
+  content: ""; position: absolute; inset: 50% auto auto 50%; width: .45em; height: .45em; border-radius: 50%;
+  background: #fff; border: 2px solid #1d1d1d; transform: translate(-50%, -50%);
+}
+
+.theme-toggle { background: rgba(255, 255, 255, .15); border: 1px solid rgba(255, 255, 255, .35); color: #fff; border-radius: 999px; width: 2.4rem; height: 2.4rem; }
+.theme-toggle:hover { background: rgba(255, 255, 255, .28); color: #fff; }
+
+/* ---------- cards ---------- */
+.poke-card {
+  border: 1px solid var(--bs-border-color); border-radius: var(--card-radius);
+  background: var(--bs-body-bg); transition: transform .15s ease, box-shadow .15s ease;
+}
+.poke-card:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(0, 0, 0, .12); }
+
+.hero {
+  border-radius: 24px; padding: 2.5rem 1.5rem; color: #fff;
+  background: linear-gradient(135deg, var(--poke-blue), #1b4f82);
+}
+.hero .lead { color: rgba(255, 255, 255, .9); }
+
+.sprite { width: 96px; height: 96px; image-rendering: pixelated; }
+.sprite-sm { width: 56px; height: 56px; image-rendering: pixelated; }
+.sprite-placeholder { width: 96px; height: 96px; display: inline-flex; align-items: center; justify-content: center; font-size: 2rem; }
+
+/* ---------- escolher Pokemon (criar/editar) ---------- */
+.roster-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: .6rem; }
+.roster-item {
+  border: 2px solid var(--bs-border-color); border-radius: 14px; background: var(--bs-body-bg);
+  padding: .4rem; text-align: center; cursor: pointer; position: relative; color: inherit;
+}
+.roster-item:hover { border-color: var(--poke-blue); }
+.roster-item.selected { border-color: var(--poke-red); box-shadow: 0 0 0 3px rgba(227, 53, 13, .2); }
+.roster-item .slot-number {
+  position: absolute; top: 6px; left: 6px; width: 1.5rem; height: 1.5rem; border-radius: 50%;
+  background: var(--poke-red); color: #fff; font-weight: 700; font-size: .8rem; display: none;
+  align-items: center; justify-content: center;
+}
+.roster-item.selected .slot-number { display: inline-flex; }
+.roster-item[hidden] { display: none; }
+
+/* ---------- badges de tipo (cores oficiais aproximadas) ---------- */
+.type-badge { display: inline-block; padding: .15em .6em; border-radius: 999px; font-size: .72rem; font-weight: 700; color: #fff; text-shadow: 0 1px 1px rgba(0, 0, 0, .25); margin: 1px; }
+.type-normal { background: #9fa19f; } .type-fire { background: #e62829; } .type-water { background: #2980ef; }
+.type-electric { background: #fac000; color: #3a2e00; text-shadow: none; } .type-grass { background: #3fa129; }
+.type-ice { background: #3dcef3; color: #07323d; text-shadow: none; } .type-fighting { background: #ff8000; }
+.type-poison { background: #9141cb; } .type-ground { background: #915121; } .type-flying { background: #81b9ef; color: #0e2a45; text-shadow: none; }
+.type-psychic { background: #ef4179; } .type-bug { background: #91a119; } .type-rock { background: #afa981; color: #2c2915; text-shadow: none; }
+.type-ghost { background: #704170; } .type-dragon { background: #5060e1; } .type-dark { background: #624d4e; }
+.type-steel { background: #60a1b8; } .type-fairy { background: #ef70ef; }
+
+.battle-log { max-height: 420px; overflow-y: auto; font-family: ui-monospace, Consolas, monospace; font-size: .85rem; border-radius: 12px; }
+
+.footer { position: absolute; bottom: 0; width: 100%; white-space: nowrap; line-height: 60px; }
+
+/* ---------- impressao / salvar como PDF (item "exportar o time") ---------- */
+@media print {
+  header, footer, .no-print, .btn { display: none !important; }
+  body { background: #fff !important; margin: 0; }
+  .poke-card { break-inside: avoid; box-shadow: none !important; }
 }

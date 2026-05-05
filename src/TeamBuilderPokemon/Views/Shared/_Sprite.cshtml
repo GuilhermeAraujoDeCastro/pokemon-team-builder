@@ -1,0 +1,10 @@
+@model Pokemon?
+@* Sprite oficial quando sabemos o numero da Pokedex; senao uma pokebola no lugar. *@
+@if (Model?.GetSpriteUrl() is string url)
+{
+    <img src="@url" alt="@Model.Name" class="@(ViewData["Small"] is true ? "sprite-sm" : "sprite")" loading="lazy" />
+}
+else
+{
+    <span class="sprite-placeholder" aria-hidden="true"><span class="pokeball"></span></span>
+}
