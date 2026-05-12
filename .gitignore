@@ -5,3 +5,4 @@ obj/
 app.db
 *.db-shm
 *.db-wal
+App_Data/
