@@ -27,7 +27,7 @@ dotnet run
 
 O banco SQLite (`app.db`) é criado e atualizado sozinho na primeira execução, pelas migrations do projeto. O terminal mostra a URL local, algo como `https://localhost:7xxx`. Crie uma conta e entre em "Minhas equipes".
 
-A confirmação de cadastro por e-mail vem desligada. Pra ligar, coloque `"Email": { "RequireConfirmedAccount": true }` no `appsettings.json`. Os e-mails não são enviados de verdade: viram arquivos `.html` em `App_Data/emails`, o que dá pra testar sem conta em provedor nenhum. Pra usar em produção, troque o `FileEmailSender` por SendGrid ou SMTP.
+A confirmação de cadastro por e-mail vem desligada. Pra ligar, coloque `"Email": { "RequireConfirmedAccount": true }` no `appsettings.json`. Os e-mails não são enviados de verdade: viram arquivos `.html` em `App_Data/emails`, o que dispensa conta em provedor de e-mail. Pra usar em produção, troque o `FileEmailSender` por SendGrid ou SMTP.
 
 Se mudar os modelos e precisar de uma migration nova:
 
@@ -36,22 +36,7 @@ dotnet tool restore
 dotnet ef migrations add NomeDaMudanca --project src/TeamBuilderPokemon
 ```
 
-## Testes
-
-```bash
-dotnet test
-```
-
-São 35 testes com xUnit:
-
-- tabela de tipos: super efetivo, pouco efetivo, imunidade e tipo duplo;
-- análise de time;
-- regras de um time válido;
-- simulação de batalha;
-- busca na PokéAPI com respostas simuladas;
-- testes de integração com `WebApplicationFactory`, que sobem o site em memória e conferem o redirecionamento pro login, a API sem login (401), o catálogo, a página pública, o cadastro com criação de time e análise, e a recusa de Pokémon repetido no time.
-
-O GitHub Actions roda os testes a cada push.
+O GitHub Actions compila o projeto a cada push.
 
 ## Arquitetura
 
@@ -70,10 +55,9 @@ src/TeamBuilderPokemon/
   Controllers/     TeamsController (telas) e ApiController (JSON)
   Views/           telas dos times, batalha, lixeira e página pública
   Data/            contexto do EF Core e migrations
-tests/TeamBuilderPokemon.Tests/
 ```
 
-`TypeChart`, `TeamAnalyzer`, `TeamRules` e `BattleSimulator` não conhecem Entity Framework nem ASP.NET. Assim a regra de negócio inteira é testada sem banco e sem HTTP, do mesmo jeito que o simulador em Python separa o cálculo de dano do resto.
+`TypeChart`, `TeamAnalyzer`, `TeamRules` e `BattleSimulator` não conhecem Entity Framework nem ASP.NET. Assim a regra de negócio inteira roda sem banco e sem HTTP, do mesmo jeito que o simulador em Python separa o cálculo de dano do resto.
 
 ## O que eu treinei com esse projeto
 
