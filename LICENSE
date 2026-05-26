@@ -1,1 +1,22 @@
-.
+Copyright (c) 2026 Guilherme Araujo de Castro. Todos os direitos reservados.
+
+O Team Builder Pokémon é um software proprietário. O código-fonte, os textos, as imagens e a documentação deste repositório pertencem a Guilherme Araujo de Castro.
+
+Sem autorização por escrito do autor, ninguém pode:
+
+- copiar, modificar ou distribuir o código, no todo ou em parte;
+- publicar o projeto ou uma versão derivada dele;
+- usar o código ou trechos dele em outro produto, gratuito ou pago;
+- vender, alugar ou sublicenciar o software.
+
+Ter acesso a este repositório não concede nenhuma dessas permissões.
+
+Pokémon e os nomes dos Pokémon são marcas registradas da Nintendo, da Game Freak e da The Pokémon Company. Os dados e os sprites vêm da PokéAPI, um serviço gratuito e aberto. Este projeto não tem ligação com nenhuma dessas empresas.
+
+O Bootstrap e o jQuery, em src/TeamBuilderPokemon/wwwroot/lib, seguem a licença MIT de cada um, que acompanha os arquivos.
+
+Bibliotecas, serviços e dados de terceiros usados pelo projeto continuam sob as licenças e os termos de quem os fornece.
+
+O software é fornecido no estado em que se encontra, sem garantia de nenhum tipo. O autor não responde por perdas ou danos causados pelo uso dele.
+
+Pedidos de autorização: guilhermeacastro.2006@gmail.com

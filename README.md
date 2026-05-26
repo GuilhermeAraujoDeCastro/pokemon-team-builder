@@ -65,4 +65,4 @@ ASP.NET Core MVC com ASP.NET Core Identity, Entity Framework Core com SQLite e s
 
 ## Licença
 
-Veja o arquivo LICENSE.
+Todos os direitos reservados (veja o arquivo LICENSE).
