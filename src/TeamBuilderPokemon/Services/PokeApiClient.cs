@@ -41,8 +41,13 @@ public class PokeApiClient
     /// <summary>"Mr. Mime" vira "mr-mime", do jeito que a PokeAPI espera.</summary>
     public static string NormalizeName(string name)
     {
-        return string.Join("-", name.Trim().ToLowerInvariant()
-            .Replace(".", " ").Replace("'", "")
+        // Nidoran♀ e Nidoran♂ viram nidoran-f e nidoran-m; Flabébé vira flabebe; Type: Null vira type-null.
+        var semAcento = string.Concat(name.Trim().ToLowerInvariant()
+            .Replace("♀", "-f").Replace("♂", "-m")
+            .Normalize(System.Text.NormalizationForm.FormD)
+            .Where(c => CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark));
+        return string.Join("-", semAcento
+            .Replace(".", " ").Replace("'", "").Replace(":", "")
             .Split(' ', StringSplitOptions.RemoveEmptyEntries));
     }
 
