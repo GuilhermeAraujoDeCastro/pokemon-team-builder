@@ -6,3 +6,8 @@ app.db
 *.db-shm
 *.db-wal
 App_Data/
+
+# Segredos, deploy e logs locais
+.env
+.env.*
+*.log
