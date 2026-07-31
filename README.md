@@ -1,6 +1,10 @@
 # Team Builder Pokémon
 
-Site em ASP.NET Core onde cada pessoa cria uma conta, monta times de até 6 Pokémon e vê na hora quais tipos de ataque são fraqueza ou resistência do time inteiro, com sugestão de quem adicionar pra cobrir os buracos. É o segundo projeto da minha trilogia Pokémon: o primeiro foi o Simulador de Batalha em Python e o terceiro é o Extrator de Dados.
+![Capa do Team Builder Pokémon](docs/capa.png)
+
+[![CI](https://github.com/GuilhermeAraujoDeCastro/pokemon-team-builder/actions/workflows/ci.yml/badge.svg)](https://github.com/GuilhermeAraujoDeCastro/pokemon-team-builder/actions/workflows/ci.yml)
+
+Site em ASP.NET Core onde cada pessoa cria uma conta, monta times de até 6 Pokémon e vê na hora quais tipos de ataque são fraqueza ou resistência do time inteiro, com sugestão de quem adicionar pra cobrir os buracos. Roda na sua máquina, sem site publicado. É o segundo projeto da minha trilogia Pokémon: o primeiro foi o [Simulador de Batalha](https://github.com/GuilhermeAraujoDeCastro/pokemon-battle-simulator) em Python e o terceiro é o [Analisador de Dados](https://github.com/GuilhermeAraujoDeCastro/pokemon-data-analyzer).
 
 ## O que o site faz
 
@@ -16,6 +20,12 @@ Site em ASP.NET Core onde cada pessoa cria uma conta, monta times de até 6 Pok�
 - API em JSON: `/api/pokemon`, `/api/teams` e `/api/teams/{id}/analysis` (as duas últimas pedem login).
 - Nomes dos tipos em português na tela e tema claro e escuro (Bootstrap 5.3).
 
+## Telas
+
+| Montando um time | Análise de tipos | No celular |
+|---|---|---|
+| ![Escolha de até 6 Pokémon para o time](docs/screenshots/01-home.png) | ![Time salvo com a análise de fraquezas e resistências](docs/screenshots/02-detalhe.png) | ![Página do time numa tela de celular](docs/screenshots/03-mobile.png) |
+
 ## Como rodar
 
 Precisa do SDK do .NET 8 (dotnet.microsoft.com/download).
@@ -25,7 +35,7 @@ cd src/TeamBuilderPokemon
 dotnet run
 ```
 
-O banco SQLite (`app.db`) é criado e atualizado sozinho na primeira execução, pelas migrations do projeto. O terminal mostra a URL local, algo como `https://localhost:7xxx`. Crie uma conta e entre em "Minhas equipes".
+O banco SQLite (`app.db`) é criado e atualizado sozinho na primeira execução, pelas migrations do projeto. O terminal mostra a URL local, algo como `https://localhost:7xxx`. Crie uma conta e entre em "Meus times".
 
 A confirmação de cadastro por e-mail vem desligada. Pra ligar, coloque `"Email": { "RequireConfirmedAccount": true }` no `appsettings.json`. Os e-mails não são enviados de verdade: viram arquivos `.html` em `App_Data/emails`, o que dispensa conta em provedor de e-mail. Pra usar em produção, troque o `FileEmailSender` por SendGrid ou SMTP.
 
@@ -63,6 +73,10 @@ src/TeamBuilderPokemon/
 
 ASP.NET Core MVC com ASP.NET Core Identity, Entity Framework Core com SQLite e seed por `HasData`, e um relacionamento muitos-para-muitos com dados extras (posição, apelido e nível) modelado como entidade própria. Também portei a mesma lógica de domínio, a tabela de tipos, de Python pra C#, mantendo os dois lados consistentes.
 
-## Licença
+## Créditos e avisos
 
-Todos os direitos reservados (veja o arquivo LICENSE).
+Os dados e os sprites vêm da [PokéAPI](https://pokeapi.co/). O Bootstrap e o jQuery, em `src/TeamBuilderPokemon/wwwroot/lib`, seguem a licença MIT de cada um, que acompanha os arquivos. Pokémon é marca da Nintendo, da Game Freak e da The Pokémon Company. Este é um projeto de fã e de estudo, sem fins lucrativos e sem ligação com essas empresas.
+
+## Licença e contato
+
+Código sob a licença MIT (veja [LICENSE](LICENSE)). Feito por Guilherme Araujo de Castro: [portfólio](https://guilhermearaujodecastro.vercel.app) · [LinkedIn](https://www.linkedin.com/in/guilherme-araujo-de-castro) · guilhermeacastro.2006@gmail.com
