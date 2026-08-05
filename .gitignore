@@ -10,4 +10,5 @@ App_Data/
 # Segredos, deploy e logs locais
 .env
 .env.*
+!.env.example
 *.log
