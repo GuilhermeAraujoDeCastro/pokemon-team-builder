@@ -23,6 +23,9 @@ public class ApplicationDbContext : IdentityDbContext
     {
         // Primeiro: e' ele que mapeia as tabelas do Identity (AspNetUsers e companhia).
         base.OnModelCreating(builder);
+        builder.Entity<Team>()
+            .HasOne(t => t.Owner).WithMany().HasForeignKey(t => t.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // Nome unico: a importacao da PokeAPI nao pode duplicar especie.
         builder.Entity<Pokemon>()

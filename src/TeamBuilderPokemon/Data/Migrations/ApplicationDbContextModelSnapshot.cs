@@ -156,11 +156,9 @@ namespace TeamBuilderPokemon.Data.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
                     b.Property<string>("LoginProvider")
-                        .HasMaxLength(128)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ProviderKey")
-                        .HasMaxLength(128)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ProviderDisplayName")
@@ -198,11 +196,9 @@ namespace TeamBuilderPokemon.Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("LoginProvider")
-                        .HasMaxLength(128)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
-                        .HasMaxLength(128)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Value")
@@ -525,15 +521,22 @@ namespace TeamBuilderPokemon.Data.Migrations
                     b.Property<bool>("IsPublic")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool?>("LegacyIsPublic")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("LegacyOwnerId")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("UserId")
-                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Teams");
                 });
@@ -642,6 +645,16 @@ namespace TeamBuilderPokemon.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("TeamBuilderPokemon.Models.Team", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "Owner")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Owner");
                 });
 
             modelBuilder.Entity("TeamBuilderPokemon.Models.TeamRevision", b =>

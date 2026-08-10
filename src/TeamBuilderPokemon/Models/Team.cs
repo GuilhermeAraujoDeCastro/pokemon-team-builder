@@ -9,7 +9,12 @@ public class Team
     public string Name { get; set; } = string.Empty;
 
     /// <summary>Id do IdentityUser dono do time (AspNetUsers.Id).</summary>
-    public string UserId { get; set; } = string.Empty;
+    public string? UserId { get; set; }
+    public Microsoft.AspNetCore.Identity.IdentityUser? Owner { get; set; }
+
+    /// <summary>Dono legado preservado quando a conta já não existe. Nunca concede acesso.</summary>
+    public string? LegacyOwnerId { get; set; }
+    public bool? LegacyIsPublic { get; set; }
 
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
