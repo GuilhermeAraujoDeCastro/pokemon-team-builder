@@ -1,0 +1,42 @@
+@model List<Team>
+
+@{
+    ViewData["Title"] = "Minhas equipes";
+}
+
+<h1>Minhas equipes</h1>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Criar nova equipe</a>
+</p>
+
+@if (!Model.Any())
+{
+    <p>Voce ainda nao criou nenhuma equipe. Crie a primeira e ve a analise de tipos na hora.</p>
+}
+else
+{
+    <div class="row">
+        @foreach (var team in Model)
+        {
+            <div class="col-md-4 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">@team.Name</h5>
+                        <p class="card-text text-muted">
+                            @team.Slots.Count Pokemon &middot; criada em @team.CreatedAtUtc.ToLocalTime().ToString("dd/MM/yyyy")
+                        </p>
+                        <p class="card-text">
+                            @string.Join(", ", team.Slots.OrderBy(s => s.SlotNumber).Select(s => s.Pokemon?.Name))
+                        </p>
+                        <a asp-action="Details" asp-route-id="@team.Id" class="btn btn-outline-primary btn-sm">Ver analise</a>
+                        <form asp-action="Delete" asp-route-id="@team.Id" method="post" class="d-inline" onsubmit="return confirm('Excluir esta equipe?');">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-outline-danger btn-sm">Excluir</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
