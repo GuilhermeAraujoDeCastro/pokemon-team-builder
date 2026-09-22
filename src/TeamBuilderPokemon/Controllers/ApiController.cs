@@ -39,7 +39,7 @@ public class ApiController : ControllerBase
     {
         var userId = _userManager.GetUserId(User);
         var teams = await _context.Teams
-            .Where(t => t.UserId == userId && t.DeletedAtUtc == null)
+            .Where(t => userId != null && t.UserId != null && t.UserId == userId && t.DeletedAtUtc == null)
             .Include(t => t.Slots).ThenInclude(s => s.Pokemon)
             .OrderByDescending(t => t.CreatedAtUtc)
             .ToListAsync();
@@ -53,7 +53,7 @@ public class ApiController : ControllerBase
         var userId = _userManager.GetUserId(User);
         var team = await _context.Teams
             .Include(t => t.Slots).ThenInclude(s => s.Pokemon)
-            .FirstOrDefaultAsync(t => t.Id == id && t.DeletedAtUtc == null && (t.IsPublic || t.UserId == userId));
+            .FirstOrDefaultAsync(t => t.Id == id && t.DeletedAtUtc == null && t.UserId != null && _context.Users.Any(u => u.Id == t.UserId) && (t.IsPublic || (userId != null && t.UserId == userId)));
         if (team is null)
         {
             return NotFound();
