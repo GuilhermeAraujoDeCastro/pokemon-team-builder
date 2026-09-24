@@ -78,4 +78,30 @@ public class TeamAnalyzerTests
 
         Assert.Equal(TypeChart.Types.Length, result.Matchups.Count);
     }
+
+    [Fact]
+    public void SuggestsPokemonThatCoverTwoWeaknessesAtOnce()
+    {
+        // Tres de Planta: fracos a Fogo, Gelo, Voador, Veneno e Inseto.
+        var team = new List<Pokemon>
+        {
+            MakeMon(1, "Grama A", "Grass"),
+            MakeMon(2, "Grama B", "Grass"),
+            MakeMon(3, "Grama C", "Grass"),
+        };
+        // Magnemite (Eletrico/Aco) resiste a Gelo, Voador, Veneno e Inseto; Squirtle so a Fogo e Gelo.
+        var roster = new List<Pokemon>(team)
+        {
+            MakeMon(4, "Magnemite", "Electric", "Steel"),
+            MakeMon(5, "Squirtle", "Water"),
+            MakeMon(6, "Eevee", "Normal"),
+        };
+
+        var result = TeamAnalyzer.Analyze(team, roster);
+
+        Assert.Equal("Magnemite", result.CoverageSuggestions.First().Name);
+        Assert.True(result.CoverageSuggestions.First().Covers.Count >= 3);
+        Assert.DoesNotContain(result.CoverageSuggestions, s => s.Name == "Eevee"); // nao cobre nada
+        Assert.DoesNotContain(result.CoverageSuggestions, s => s.Name.StartsWith("Grama")); // ja esta no time
+    }
 }
