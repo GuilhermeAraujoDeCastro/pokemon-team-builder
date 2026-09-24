@@ -1,13 +1,17 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace TeamBuilderPokemon.Models;
 
 /// <summary>
-/// Uma posicao ocupada por um Pokemon dentro de um time (no maximo 6 por
-/// time). Existe como entidade separada, em vez de um List&lt;Pokemon&gt;
-/// direto em Team, pra guardar a ordem (SlotNumber) e deixar espaco pra
-/// atributos futuros por posicao (nivel, apelido) sem mexer no resto.
+/// Uma posicao do time (ate 6). Entidade propria pra guardar a ordem, o apelido e o nivel.
 /// </summary>
 public class TeamSlot
 {
+    public const int MinLevel = 1;
+    public const int MaxLevel = 100;
+    public const int DefaultLevel = 50;
+    public const int NicknameMaxLength = 20;
+
     public int Id { get; set; }
 
     public int TeamId { get; set; }
@@ -17,4 +21,13 @@ public class TeamSlot
     public Pokemon? Pokemon { get; set; }
 
     public int SlotNumber { get; set; }
+
+    [StringLength(NicknameMaxLength)]
+    public string? Nickname { get; set; }
+
+    [Range(MinLevel, MaxLevel)]
+    public int Level { get; set; } = DefaultLevel;
+
+    /// <summary>Apelido quando tiver, senao o nome da especie.</summary>
+    public string DisplayName => string.IsNullOrWhiteSpace(Nickname) ? Pokemon?.Name ?? "?" : Nickname!;
 }
