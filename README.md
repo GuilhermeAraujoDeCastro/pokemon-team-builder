@@ -1,89 +1,84 @@
 # Team Builder Pokémon
 
-Site em ASP.NET Core onde cada usuário cria conta, monta até 6 times de Pokémon e recebe na hora uma análise de quais tipos de ataque são fraqueza ou resistência do time inteiro, com sugestão de quem adicionar pra cobrir os buracos. É o segundo projeto da minha trilogia Pokémon: o primeiro foi o Simulador de Batalha em Python (linha de comando), esse aqui troca o terminal por um site com login e banco de dados de verdade, e o terceiro vai ser um extrator e analisador de dados sobre os jogos.
-
-## Como configurar
-
-Precisa do SDK do .NET 8 instalado (dotnet.microsoft.com/download).
-
-```bash
-cd team-builder-pokemon
-dotnet restore
-```
-
-Se ainda não tiver a ferramenta de linha de comando do Entity Framework Core instalada:
-
-```bash
-dotnet tool install --global dotnet-ef
-```
-
-Se já tiver uma versão antiga e der erro de versão, troque o `install` por `dotnet tool update --global dotnet-ef`.
-
-## Como rodar
-
-```bash
-cd src/TeamBuilderPokemon
-dotnet ef migrations add AddPokemonTeams
-dotnet ef database update
-dotnet run
-```
-
-O primeiro comando gera a migration que cria as tabelas de Pokémon, Time e Slot (a migration da parte de login já vem pronta desde a criação do projeto). O segundo aplica todas as migrations num banco SQLite novo, `app.db`, criado automaticamente dentro da pasta do projeto e fora do controle de versão. O terceiro sobe o site: o terminal mostra a URL local, algo como `https://localhost:7xxx`.
-
-Abra essa URL, clique em "Criar conta", cadastre um e-mail e uma senha (não precisa confirmar por e-mail, o projeto não manda e-mail nenhum) e você já entra direto. Dali, "Minhas equipes" e depois "Criar nova equipe".
-
-## Sobre esse projeto eu não consegui compilar sozinho (leia antes de rodar)
-
-Diferente dos outros dois projetos da trilogia, que eu testei e rodei inteiros antes de entregar, esse eu escrevi sem conseguir compilar nem uma vez. O ambiente onde eu rodo código não tem acesso à NuGet, o repositório oficial de pacotes do .NET, então todo `dotnet restore` falha com erro de rede, e sem restore não tem como compilar nada em C#. Confirmei que não era algo específico desse projeto tentando até um `dotnet new console` vazio, que falhou do mesmo jeito: é uma restrição do ambiente inteiro, não um problema deste código.
-
-O que eu fiz pra compensar: usei o `dotnet new mvc --auth Individual` de verdade pra gerar a base do projeto (login, banco, estrutura de pastas), porque essa parte funciona mesmo sem internet, só o restore automático no final que falha. Todo o código novo (os modelos de Pokémon, Time e Slot, a tabela de tipos, a análise de time, o controller e as telas) foi escrito em cima dessa base real, e reli cada arquivo linha por linha procurando erro, em vez de só confiar que ia funcionar. Nessa releitura encontrei e corrigi um bug de verdade que já vinha na base gerada pelo template: faltava a linha `app.UseAuthentication()` no `Program.cs`, e sem ela o login nunca teria funcionado de verdade (o site aceitaria a senha, mas esqueceria quem você era assim que a página seguinte carregasse). Também abri o `app.db` que o template tinha criado, pra confirmar que o esquema de login já estava com a migration certa registrada, e apaguei esse arquivo antes de te mandar o projeto: o `dotnet ef database update` recria ele do zero, e um banco montado do zero pelas migrations é mais confiável do que um arquivo pronto de origem incerta.
-
-A tabela de efetividade de tipos é a mesma matriz de 18 tipos que eu já testei e usei no Simulador de Batalha, o primeiro projeto da trilogia. Copiei os mesmos números, tipo por tipo, então se aquele projeto está certo, esse também está.
-
-Mesmo assim, é código C# que nunca rodou de ponta a ponta. Segue os passos de "Como rodar" acima e, se `dotnet restore`, `dotnet ef` ou `dotnet run` derem algum erro, me manda a mensagem completa que eu conserto. Acho bem provável que dê tudo certo de primeira, mas prefiro avisar antes do que prometer sem poder confirmar.
+Site em ASP.NET Core onde cada pessoa cria uma conta, monta times de até 6 Pokémon e vê na hora quais tipos de ataque são fraqueza ou resistência do time inteiro, com sugestão de quem adicionar pra cobrir os buracos. É o segundo projeto da minha trilogia Pokémon: o primeiro foi o Simulador de Batalha em Python e o terceiro é o Extrator de Dados.
 
 ## O que o site faz
 
-Cada usuário só vê os próprios times: login via ASP.NET Core Identity, senha com hash, tudo isolado por conta. Um time tem nome e até 6 Pokémon, escolhidos de um catálogo fixo de 36 que cobre os 18 tipos que existem. Na tela de detalhes de cada time, o site calcula, pra cada um dos 18 tipos de ataque, quantos Pokémon do time são fracos, resistentes ou imunes a ele. Marca como fraqueza quando mais da metade do time toma dano dobrado ou mais, como fraqueza crítica quando são dois terços ou mais, e como resistência quando mais da metade toma dano reduzido. Pra cada fraqueza, sugere até 5 Pokémon do catálogo, entre os que ainda não estão no time, que resistem aquele tipo.
+- Login com ASP.NET Core Identity. Cada conta só vê os próprios times.
+- Catálogo inicial de 36 Pokémon que cobre os 18 tipos. Dá pra trazer qualquer outro pelo nome, buscando na PokéAPI.
+- Times com apelido e nível (1 a 100) pra cada Pokémon.
+- Análise do time contra os 18 tipos de ataque: quantos membros são fracos, resistentes ou imunes a cada um. Mais da metade fraca vira fraqueza, dois terços ou mais vira fraqueza crítica.
+- Sugestões pra cada fraqueza, com destaque pros Pokémon que resistem a duas ou mais fraquezas de uma vez.
+- Histórico de alterações de cada time, com opção de voltar pra uma versão anterior.
+- Lixeira: time excluído pode ser restaurado ou apagado de vez.
+- Simulação de batalha entre dois times, turno a turno, usando a tabela de tipos e o nível de cada Pokémon.
+- Página pública só leitura pra compartilhar um time.
+- API em JSON: `/api/pokemon`, `/api/teams` e `/api/teams/{id}/analysis` (as duas últimas pedem login).
+- Nomes dos tipos em português na tela e tema claro e escuro (Bootstrap 5.3).
 
-## Rodando os testes
+## Como rodar
+
+Precisa do SDK do .NET 8 (dotnet.microsoft.com/download).
 
 ```bash
-cd team-builder-pokemon
+cd src/TeamBuilderPokemon
+dotnet run
+```
+
+O banco SQLite (`app.db`) é criado e atualizado sozinho na primeira execução, pelas migrations do projeto. O terminal mostra a URL local, algo como `https://localhost:7xxx`. Crie uma conta e entre em "Minhas equipes".
+
+A confirmação de cadastro por e-mail vem desligada. Pra ligar, coloque `"Email": { "RequireConfirmedAccount": true }` no `appsettings.json`. Os e-mails não são enviados de verdade: viram arquivos `.html` em `App_Data/emails`, o que dá pra testar sem conta em provedor nenhum. Pra usar em produção, troque o `FileEmailSender` por SendGrid ou SMTP.
+
+Se mudar os modelos e precisar de uma migration nova:
+
+```bash
+dotnet tool restore
+dotnet ef migrations add NomeDaMudanca --project src/TeamBuilderPokemon
+```
+
+## Testes
+
+```bash
 dotnet test
 ```
 
-São 9 testes com xUnit, todos sobre a lógica pura de tipos e análise de time, sem tocar em banco de dados ou HTTP. Cinco confirmam a tabela de efetividade: super efetivo, pouco efetivo, imunidade, os dois tipos de um Pokémon multiplicando junto, e que maiúscula ou minúscula no nome do tipo não muda o resultado. Quatro confirmam a análise de time: fraqueza crítica quando a maioria do time é fraca a um tipo, sugestão de um Pokémon do catálogo que resolve essa fraqueza, um time vazio que não quebra o cálculo, e a garantia de que a análise sempre devolve exatamente 18 linhas, uma por tipo.
+São 35 testes com xUnit:
+
+- tabela de tipos: super efetivo, pouco efetivo, imunidade e tipo duplo;
+- análise de time;
+- regras de um time válido;
+- simulação de batalha;
+- busca na PokéAPI com respostas simuladas;
+- testes de integração com `WebApplicationFactory`, que sobem o site em memória e conferem o redirecionamento pro login, a API sem login (401), o catálogo, a página pública, o cadastro com criação de time e análise, e a recusa de Pokémon repetido no time.
+
+O GitHub Actions roda os testes a cada push.
 
 ## Arquitetura
 
 ```
 TeamBuilderPokemon.sln
 src/TeamBuilderPokemon/
-  Models/
-    Pokemon.cs                     # Id, Nome, Tipo1, Tipo2 (opcional)
-    Team.cs                        # Id, Nome, dono (UserId), lista de slots
-    TeamSlot.cs                    # liga um Time a um Pokemon numa posição (1 a 6)
-    PokemonSeedData.cs             # catálogo fixo com os 36 Pokémon
+  Models/          Pokemon, Team, TeamSlot (apelido e nível), TeamRevision (histórico) e o catálogo inicial
   Services/
-    TypeChart.cs                   # a mesma tabela de 18 tipos do simulador em Python
-    TeamAnalyzer.cs                # calcula fraquezas e resistências de um time inteiro
-  Controllers/
-    TeamsController.cs             # criar, listar, ver análise e excluir times
-  Views/Teams/                     # telas de listar, criar e ver detalhes de um time
-  Data/ApplicationDbContext.cs     # contexto do EF Core (Identity + Pokemon/Team/TeamSlot)
-  Areas/Identity/                  # páginas de login e cadastro, geradas pelo template oficial
+    TypeChart.cs        tabela de 18 tipos, a mesma do simulador em Python
+    TeamAnalyzer.cs     fraquezas, resistências e sugestões de um time
+    TeamRules.cs        regras de um time válido
+    BattleSimulator.cs  batalha entre dois times
+    PokeApiClient.cs    busca de Pokémon novos na PokéAPI
+    TypeNames.cs        nomes dos tipos em português
+    FileEmailSender.cs  e-mail salvo em arquivo
+  Controllers/     TeamsController (telas) e ApiController (JSON)
+  Views/           telas dos times, batalha, lixeira e página pública
+  Data/            contexto do EF Core e migrations
 tests/TeamBuilderPokemon.Tests/
-  TypeChartTests.cs                # 5 testes da tabela de tipos
-  TeamAnalyzerTests.cs             # 4 testes da análise de time
 ```
 
-A separação em `Services/TypeChart.cs` e `Services/TeamAnalyzer.cs` é de propósito: nenhuma das duas classes conhece Entity Framework, ASP.NET ou banco de dados, então dá pra testar a regra de negócio inteira sem simular HTTP nem banco, do mesmo jeito que o simulador em Python separa o cálculo de dano do resto.
+`TypeChart`, `TeamAnalyzer`, `TeamRules` e `BattleSimulator` não conhecem Entity Framework nem ASP.NET. Assim a regra de negócio inteira é testada sem banco e sem HTTP, do mesmo jeito que o simulador em Python separa o cálculo de dano do resto.
 
 ## O que eu treinei com esse projeto
 
-ASP.NET Core MVC com autenticação individual via ASP.NET Core Identity, Entity Framework Core com SQLite e seed de dados por `HasData`, e um relacionamento muitos-para-muitos com atributo extra (a posição no time) modelado como entidade própria em vez de uma tabela de junção simples. Também treinei portar a mesma lógica de domínio, a tabela de tipos, de uma linguagem pra outra mantendo os dois lados consistentes. E foi a primeira vez que escrevi um projeto inteiro sem poder compilar nem uma vez, o que me obrigou a ler cada arquivo com mais cuidado do que o normal.
+ASP.NET Core MVC com ASP.NET Core Identity, Entity Framework Core com SQLite e seed por `HasData`, e um relacionamento muitos-para-muitos com dados extras (posição, apelido e nível) modelado como entidade própria. Também portei a mesma lógica de domínio, a tabela de tipos, de Python pra C#, mantendo os dois lados consistentes.
 
-## Próximos passos possíveis
+## Licença
 
-Deixar o usuário editar apelido e nível de cada Pokémon do time, simular uma batalha entre dois times usando o motor do Simulador de Batalha em Python, ou uma versão da mesma fórmula aqui em C#, e publicar o site de verdade num serviço como Azure ou Render pra virar um link que dá pra colocar no currículo em vez de só um repositório.
+Veja o arquivo LICENSE.
