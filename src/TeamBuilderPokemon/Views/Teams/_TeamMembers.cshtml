@@ -1,0 +1,19 @@
+@model Team
+@* Cards dos Pokemon do time (sprite, apelido, nivel e tipos). *@
+<div class="row g-2 mb-4">
+    @foreach (var slot in Model.Slots.OrderBy(s => s.SlotNumber))
+    {
+        <div class="col-6 col-sm-4 col-lg-2">
+            <div class="poke-card text-center p-2 h-100">
+                <partial name="_Sprite" model="slot.Pokemon" />
+                <div class="fw-semibold">@slot.DisplayName</div>
+                @if (!string.IsNullOrWhiteSpace(slot.Nickname))
+                {
+                    <div class="small text-body-secondary">@slot.Pokemon?.Name</div>
+                }
+                <div class="small mb-1">Nv. @slot.Level</div>
+                <partial name="_Types" model="slot.Pokemon?.GetTypes() ?? Array.Empty<string>()" />
+            </div>
+        </div>
+    }
+</div>

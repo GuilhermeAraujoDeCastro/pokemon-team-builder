@@ -1,0 +1,10 @@
+@model int?
+@* Formulario separado (nao pode ficar dentro do form do time): importa um Pokemon da PokeAPI pro catalogo. *@
+<form asp-controller="Teams" asp-action="ImportPokemon" method="post" class="poke-card p-3 mt-4 no-print">
+    <input type="hidden" name="teamId" value="@Model" />
+    <label for="import-name" class="form-label fw-semibold">Não achou quem queria? Traga da PokeAPI</label>
+    <div class="input-group">
+        <input type="text" class="form-control" id="import-name" name="name" placeholder="Nome em inglês, ex.: charizard, lucario" maxlength="40" />
+        <button type="submit" class="btn btn-outline-primary">Importar</button>
+    </div>
+</form>

@@ -1,0 +1,20 @@
+@model EditSlotInput
+@{
+    var roster = ViewData["Roster"] as List<Pokemon> ?? new List<Pokemon>();
+}
+@* Uma linha do time na edicao. Os "name" sao numerados pelo site.js (Slots[0].PokemonId...). *@
+<tr>
+    <td class="slot-index fw-bold"></td>
+    <td>
+        <select class="form-select" data-field="PokemonId" aria-label="Pokémon" required>
+            <option value="">Escolha...</option>
+            @foreach (var pokemon in roster)
+            {
+                <option value="@pokemon.Id" selected="@(pokemon.Id == Model.PokemonId)">@pokemon.Name (@string.Join("/", pokemon.GetTypes().Select(TypeNames.ToPt)))</option>
+            }
+        </select>
+    </td>
+    <td><input type="text" class="form-control" data-field="Nickname" value="@Model.Nickname" maxlength="@TeamSlot.NicknameMaxLength" placeholder="Opcional" aria-label="Apelido" /></td>
+    <td><input type="number" class="form-control" data-field="Level" value="@Model.Level" min="@TeamSlot.MinLevel" max="@TeamSlot.MaxLevel" aria-label="Nível" required /></td>
+    <td><button type="button" class="btn btn-outline-danger btn-sm remove-slot" aria-label="Remover do time">✕</button></td>
+</tr>

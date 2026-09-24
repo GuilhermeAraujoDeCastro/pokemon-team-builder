@@ -1,37 +1,50 @@
 @model List<Team>
-
 @{
-    ViewData["Title"] = "Minhas equipes";
+    ViewData["Title"] = "Meus times";
+    var trashCount = ViewBag.TrashCount as int? ?? 0;
 }
 
-<h1>Minhas equipes</h1>
-
-<p>
-    <a asp-action="Create" class="btn btn-primary">Criar nova equipe</a>
-</p>
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+    <h1 class="mb-0">Meus times</h1>
+    <div class="d-flex gap-2">
+        <a asp-action="Trash" class="btn btn-outline-secondary">🗑 Lixeira @(trashCount > 0 ? $"({trashCount})" : "")</a>
+        <a asp-action="Create" class="btn btn-danger">+ Novo time</a>
+    </div>
+</div>
 
 @if (!Model.Any())
 {
-    <p>Voce ainda nao criou nenhuma equipe. Crie a primeira e ve a analise de tipos na hora.</p>
+    <div class="poke-card p-4 text-center">
+        <p class="mb-3">Você ainda não montou nenhum time. Crie o primeiro e veja a análise de tipos na hora.</p>
+        <a asp-action="Create" class="btn btn-danger">Montar meu primeiro time</a>
+    </div>
 }
 else
 {
-    <div class="row">
+    <div class="row g-3">
         @foreach (var team in Model)
         {
-            <div class="col-md-4 mb-3">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">@team.Name</h5>
-                        <p class="card-text text-muted">
-                            @team.Slots.Count Pokemon &middot; criada em @team.CreatedAtUtc.ToLocalTime().ToString("dd/MM/yyyy")
-                        </p>
-                        <p class="card-text">
-                            @string.Join(", ", team.Slots.OrderBy(s => s.SlotNumber).Select(s => s.Pokemon?.Name))
-                        </p>
-                        <a asp-action="Details" asp-route-id="@team.Id" class="btn btn-outline-primary btn-sm">Ver analise</a>
-                        <form asp-action="Delete" asp-route-id="@team.Id" method="post" class="d-inline" onsubmit="return confirm('Excluir esta equipe?');">
-                            @Html.AntiForgeryToken()
+            <div class="col-md-6 col-lg-4">
+                <div class="poke-card p-3 h-100 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h2 class="h5 mb-1">@team.Name</h2>
+                        @if (team.IsPublic)
+                        {
+                            <span class="badge text-bg-info" title="Qualquer pessoa com o link vê este time">Público</span>
+                        }
+                    </div>
+                    <p class="text-body-secondary small mb-2">@team.Slots.Count Pokémon · criado em @team.CreatedAtUtc.ToLocalTime().ToString("dd/MM/yyyy")</p>
+                    <div class="d-flex flex-wrap mb-3">
+                        @foreach (var slot in team.Slots.OrderBy(s => s.SlotNumber))
+                        {
+                            <span title="@slot.DisplayName (Nv. @slot.Level)"><partial name="_Sprite" model="slot.Pokemon" view-data='new ViewDataDictionary(ViewData) { ["Small"] = true }' /></span>
+                        }
+                    </div>
+                    <div class="mt-auto d-flex flex-wrap gap-2">
+                        <a asp-action="Details" asp-route-id="@team.Id" class="btn btn-primary btn-sm">Ver análise</a>
+                        <a asp-action="Edit" asp-route-id="@team.Id" class="btn btn-outline-primary btn-sm">Editar</a>
+                        <a asp-action="Battle" asp-route-id="@team.Id" class="btn btn-outline-warning btn-sm">⚔ Batalhar</a>
+                        <form asp-action="Delete" asp-route-id="@team.Id" method="post" class="d-inline">
                             <button type="submit" class="btn btn-outline-danger btn-sm">Excluir</button>
                         </form>
                     </div>

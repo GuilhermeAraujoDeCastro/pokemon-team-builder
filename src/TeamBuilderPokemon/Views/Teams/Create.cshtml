@@ -1,36 +1,39 @@
 @{
-    ViewData["Title"] = "Criar equipe";
+    ViewData["Title"] = "Novo time";
     var roster = ViewBag.Roster as List<Pokemon> ?? new List<Pokemon>();
+    var selected = ViewBag.Selected as List<int> ?? new List<int>();
 }
 
-<h1>Criar equipe</h1>
+<h1>Novo time</h1>
 
-<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+<div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
 <form asp-action="Create" method="post">
-    @Html.AntiForgeryToken()
-    <div class="form-group mb-3">
-        <label for="name">Nome da equipe</label>
-        <input type="text" class="form-control" id="name" name="name" maxlength="100" required />
+    <div class="mb-3" style="max-width: 420px;">
+        <label for="name" class="form-label fw-semibold">Nome do time</label>
+        <input type="text" class="form-control" id="name" name="name" maxlength="100" value="@ViewBag.Name" required />
     </div>
 
-    <p>Escolha ate 6 Pokemon (a ordem que voce marcar vira a ordem dos slots):</p>
+    <div class="d-flex flex-wrap align-items-end justify-content-between gap-2 mb-2">
+        <p class="mb-0">Toque em até 6 Pokémon. A ordem dos toques vira a ordem do time (<strong id="picked-count">0/6</strong>).</p>
+        <input type="search" id="roster-search" class="form-control" style="max-width: 260px;" placeholder="Buscar por nome ou tipo..." aria-label="Buscar Pokémon" />
+    </div>
 
-    <div class="row">
+    <div id="team-picker" class="roster-grid mb-3" data-max="@Team.MaxSlots" data-selected="@System.Text.Json.JsonSerializer.Serialize(selected)">
         @foreach (var pokemon in roster)
         {
-            <div class="col-md-3 col-sm-4 col-6 mb-2">
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="pokemonIds" value="@pokemon.Id" id="pkm-@pokemon.Id" />
-                    <label class="form-check-label" for="pkm-@pokemon.Id">
-                        @pokemon.Name
-                        <br />
-                        <small class="text-muted">@string.Join("/", pokemon.GetTypes())</small>
-                    </label>
-                </div>
-            </div>
+            <button type="button" class="roster-item" data-id="@pokemon.Id" data-roster-name="@pokemon.Name"
+                    data-roster-types="@string.Join(" ", pokemon.GetTypes().Select(TypeNames.ToPt))" aria-pressed="false">
+                <span class="slot-number"></span>
+                <partial name="_Sprite" model="pokemon" view-data='new ViewDataDictionary(ViewData) { ["Small"] = true }' />
+                <span class="d-block fw-semibold small">@pokemon.Name</span>
+                <partial name="_Types" model="pokemon.GetTypes()" />
+            </button>
         }
     </div>
 
-    <button type="submit" class="btn btn-primary mt-3">Salvar equipe</button>
+    <div id="picked-inputs"></div>
+    <button type="submit" class="btn btn-danger btn-lg">Salvar time</button>
 </form>
+
+<partial name="_ImportPokemon" model="(int?)null" />

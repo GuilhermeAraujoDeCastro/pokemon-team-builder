@@ -1,0 +1,66 @@
+@model TeamAnalysisResult?
+@* Tabela de fraquezas/resistencias + sugestoes de cobertura. Usada no detalhe e na pagina publica. *@
+<h2 class="h4">Análise de tipos</h2>
+
+@if (Model is null)
+{
+    <p>Não foi possível calcular a análise deste time.</p>
+}
+else
+{
+    <p class="text-body-secondary small">
+        Fraqueza: mais da metade do time toma dano aumentado desse tipo de ataque. Fraqueza crítica: dois terços ou mais.
+        Resistência: mais da metade recebe dano reduzido.
+    </p>
+
+    @if (Model.CoverageSuggestions.Any())
+    {
+        <div class="poke-card p-3 mb-3">
+            <h3 class="h6 mb-2">Quem cobre várias fraquezas de uma vez</h3>
+            <div class="d-flex flex-wrap gap-3">
+                @foreach (var suggestion in Model.CoverageSuggestions)
+                {
+                    <div class="text-center" style="width: 130px;">
+                        @if (suggestion.SpriteUrl is not null)
+                        {
+                            <img src="@suggestion.SpriteUrl" alt="@suggestion.Name" class="sprite-sm" loading="lazy" />
+                        }
+                        <div class="fw-semibold small">@suggestion.Name</div>
+                        <div class="small text-body-secondary">resiste a</div>
+                        <partial name="_Types" model="suggestion.Covers" />
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <div class="table-responsive poke-card p-2">
+        <table class="table table-sm align-middle mb-0">
+            <thead>
+                <tr><th>Ataque</th><th>Fracos</th><th>Resistentes</th><th>Imunes</th><th>Situação</th><th>Quem cobre</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var matchup in Model.Matchups)
+                {
+                    var rowClass = matchup.IsCriticalWeakness ? "table-danger"
+                        : matchup.IsWeakness ? "table-warning"
+                        : matchup.IsResistance ? "table-success"
+                        : "";
+                    var status = matchup.IsCriticalWeakness ? "Fraqueza crítica"
+                        : matchup.IsWeakness ? "Fraqueza"
+                        : matchup.IsResistance ? "Resistência"
+                        : "Equilibrado";
+
+                    <tr class="@rowClass">
+                        <td><partial name="_Types" model="new[] { matchup.Type }" /></td>
+                        <td>@matchup.WeakCount</td>
+                        <td>@matchup.ResistantCount</td>
+                        <td>@matchup.ImmuneCount</td>
+                        <td>@status</td>
+                        <td class="small">@string.Join(", ", matchup.SuggestedPokemon)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

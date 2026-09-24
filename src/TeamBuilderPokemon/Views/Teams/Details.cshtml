@@ -1,91 +1,50 @@
 @model Team
 @{
-    ViewData["Title"] = $"Equipe: {Model.Name}";
-    var analysis = ViewBag.Analysis as TeamAnalysisResult;
+    ViewData["Title"] = $"Time: {Model.Name}";
+    var revisions = ViewBag.Revisions as List<TeamRevision> ?? new List<TeamRevision>();
+    var shareUrl = ViewBag.ShareUrl as string;
 }
 
-<h1>@Model.Name</h1>
-<p class="text-muted">Criada em @Model.CreatedAtUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</p>
-
-<h2>Pokemon da equipe</h2>
-<div class="row mb-4">
-    @foreach (var slot in Model.Slots.OrderBy(s => s.SlotNumber))
-    {
-        <div class="col-md-2 col-sm-4 col-6 mb-2">
-            <div class="card text-center">
-                <div class="card-body">
-                    <strong>@slot.Pokemon?.Name</strong>
-                    <br />
-                    <small class="text-muted">@string.Join("/", slot.Pokemon?.GetTypes() ?? Array.Empty<string>())</small>
-                </div>
-            </div>
-        </div>
-    }
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+    <div>
+        <h1 class="mb-0">@Model.Name</h1>
+        <p class="text-body-secondary mb-0">Criado em @Model.CreatedAtUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2 no-print">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary">Editar</a>
+        <a asp-action="Battle" asp-route-id="@Model.Id" class="btn btn-warning">⚔ Batalhar</a>
+        <button type="button" class="btn btn-outline-secondary" onclick="window.print()" title="Abre a impressão; escolha 'Salvar como PDF'">🖨 Salvar PDF</button>
+    </div>
 </div>
 
-<h2>Analise de tipos</h2>
-
-@if (analysis is null)
+@if (Model.IsPublic && shareUrl is not null)
 {
-    <p>Nao foi possivel calcular a analise desta equipe.</p>
-}
-else
-{
-    <p class="text-muted">
-        Fraqueza: mais da metade da equipe toma dano dobrado (ou mais) desse tipo de ataque.
-        Fraqueza critica: dois tercos ou mais da equipe.
-        Resistencia: mais da metade da equipe recebe dano reduzido.
-    </p>
-
-    <div class="table-responsive">
-        <table class="table table-sm table-bordered align-middle">
-            <thead>
-                <tr>
-                    <th>Tipo de ataque</th>
-                    <th>Fracos</th>
-                    <th>Resistentes</th>
-                    <th>Imunes</th>
-                    <th>Situacao</th>
-                    <th>Sugestoes pra cobrir a fraqueza</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var matchup in analysis.Matchups)
-                {
-                    var rowClass = matchup.IsCriticalWeakness ? "table-danger"
-                        : matchup.IsWeakness ? "table-warning"
-                        : matchup.IsResistance ? "table-success"
-                        : "";
-
-                    <tr class="@rowClass">
-                        <td>@matchup.Type</td>
-                        <td>@matchup.WeakCount</td>
-                        <td>@matchup.ResistantCount</td>
-                        <td>@matchup.ImmuneCount</td>
-                        <td>
-                            @if (matchup.IsCriticalWeakness)
-                            {
-                                <span>Fraqueza critica</span>
-                            }
-                            else if (matchup.IsWeakness)
-                            {
-                                <span>Fraqueza</span>
-                            }
-                            else if (matchup.IsResistance)
-                            {
-                                <span>Resistencia</span>
-                            }
-                            else
-                            {
-                                <span>Equilibrado</span>
-                            }
-                        </td>
-                        <td>@string.Join(", ", matchup.SuggestedPokemon)</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+    <div class="alert alert-info d-flex flex-wrap align-items-center gap-2 no-print">
+        <span>Este time é público:</span>
+        <a href="@shareUrl" class="text-break">@shareUrl</a>
+        <button type="button" class="btn btn-sm btn-info" data-copy="@shareUrl">Copiar link</button>
     </div>
 }
 
-<a asp-action="Index" class="btn btn-secondary">Voltar</a>
+<partial name="_TeamMembers" model="Model" />
+<partial name="_Analysis" model="ViewBag.Analysis as TeamAnalysisResult" />
+
+@if (revisions.Any())
+{
+    <h2 class="h4 mt-4">Histórico de versões</h2>
+    <p class="text-body-secondary small">Cada edição guarda como o time estava antes. Restaurar também guarda a versão atual.</p>
+    <ul class="list-group mb-3 no-print">
+        @foreach (var revision in revisions)
+        {
+            var snapshot = revision.ReadSnapshot();
+            <li class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <span><strong>@revision.CreatedAtUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</strong> · "@snapshot.Name" com @snapshot.Slots.Count Pokémon</span>
+                <form asp-action="RestoreRevision" asp-route-id="@Model.Id" asp-route-revisionId="@revision.Id" method="post">
+                    <button type="submit" class="btn btn-sm btn-outline-secondary">Restaurar</button>
+                </form>
+            </li>
+        }
+    </ul>
+}
+
+<a asp-action="Index" class="btn btn-secondary mt-3 no-print">Voltar</a>
