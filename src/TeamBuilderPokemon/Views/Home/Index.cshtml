@@ -1,39 +1,41 @@
 @{
-    ViewData["Title"] = "Team Builder Pokémon";
+    ViewData["Title"] = "Início";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Team Builder Pokémon</h1>
-    <p class="lead">
-        Monte uma equipe de ate 6 Pokemon e veja na hora quais tipos de
-        ataque sao fraqueza ou resistencia do time inteiro, com sugestoes de
-        quem adicionar pra cobrir os buracos.
+<section class="hero text-center mb-4">
+    <h1 class="display-5 fw-bold"><span class="pokeball" aria-hidden="true"></span>Team Builder Pokémon</h1>
+    <p class="lead mx-auto" style="max-width: 640px;">
+        Monte um time de até 6 Pokémon e veja na hora quais tipos de ataque são fraqueza ou resistência do time inteiro,
+        com sugestões de quem colocar pra cobrir os buracos.
     </p>
-
     @if (User.Identity?.IsAuthenticated == true)
     {
-        <a asp-controller="Teams" asp-action="Index" class="btn btn-primary btn-lg">Ver minhas equipes</a>
+        <a asp-controller="Teams" asp-action="Index" class="btn btn-warning btn-lg fw-semibold">Ver meus times</a>
     }
     else
     {
-        <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-primary btn-lg">Criar conta</a>
-        <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-outline-primary btn-lg">Entrar</a>
+        <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-warning btn-lg fw-semibold">Criar conta</a>
+        <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-outline-light btn-lg">Entrar</a>
     }
-</div>
+</section>
 
-<hr />
-
-<div class="row mt-4">
+<div class="row g-3">
     <div class="col-md-4">
-        <h3>36 Pokemon, 18 tipos</h3>
-        <p>O catalogo cobre os 18 tipos que existem, de Bulbasaur a Gible, entao qualquer combinacao de equipe tem uma analise que faz sentido.</p>
+        <div class="poke-card p-3 h-100">
+            <h2 class="h5">Catálogo que cresce</h2>
+            <p class="mb-0">Começa com 36 Pokémon cobrindo os 18 tipos, e qualquer outro pode ser importado da PokeAPI pelo nome.</p>
+        </div>
     </div>
     <div class="col-md-4">
-        <h3>Analise automatica</h3>
-        <p>Cada equipe e avaliada contra os 18 tipos de ataque: quantos membros sao fracos, resistentes ou imunes a cada um, e o que fazer a respeito.</p>
+        <div class="poke-card p-3 h-100">
+            <h2 class="h5">Análise automática</h2>
+            <p class="mb-0">Cada time é avaliado contra os 18 tipos de ataque, com sugestões que cobrem duas fraquezas de uma vez.</p>
+        </div>
     </div>
     <div class="col-md-4">
-        <h3>Mesma formula do simulador de batalha</h3>
-        <p>A tabela de efetividade de tipos e a mesma usada no meu Simulador de Batalha Pokemon em Python, portada pra C#.</p>
+        <div class="poke-card p-3 h-100">
+            <h2 class="h5">Batalha simulada</h2>
+            <p class="mb-0">Coloque dois times pra lutar com a mesma fórmula de dano do meu Simulador de Batalha em Python.</p>
+        </div>
     </div>
 </div>

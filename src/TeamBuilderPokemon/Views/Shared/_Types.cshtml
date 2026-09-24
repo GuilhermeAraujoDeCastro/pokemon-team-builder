@@ -1,0 +1,6 @@
+@model IReadOnlyList<string>
+@* Badges coloridos dos tipos, com o nome em portugues. *@
+@foreach (var type in Model)
+{
+    <span class="type-badge type-@type.ToLowerInvariant()">@TypeNames.ToPt(type)</span>
+}
