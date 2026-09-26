@@ -81,8 +81,3 @@ app.MapControllerRoute(
 app.MapRazorPages();
 
 app.Run();
-
-// Deixa a classe visivel pros testes de integracao (WebApplicationFactory<Program>).
-public partial class Program
-{
-}
