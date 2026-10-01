@@ -89,6 +89,11 @@ public class TeamsController : Controller
             TempData["Error"] = "Digite o nome do Pokémon pra buscar na PokeAPI.";
             return back;
         }
+        if (name.Length > 40) // o maxlength da tela não vale pra POST feito na mão
+        {
+            TempData["Error"] = "Nome grande demais. Nenhum Pokémon tem mais de 40 letras.";
+            return back;
+        }
 
         try
         {
@@ -107,6 +112,11 @@ public class TeamsController : Controller
             _context.Pokemons.Add(pokemon);
             await _context.SaveChangesAsync();
             TempData["Message"] = $"{pokemon.Name} ({string.Join("/", pokemon.GetTypes())}) entrou no catálogo!";
+        }
+        catch (DbUpdateException)
+        {
+            // Dois pedidos do mesmo Pokémon ao mesmo tempo: o índice único barra o segundo, que não vira erro 500.
+            TempData["Message"] = $"{name.Trim()} já estava no catálogo.";
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
         {
@@ -298,6 +308,10 @@ public class TeamsController : Controller
         List<Fighter> opponentFighters;
         string opponentName;
         var opponent = opponentId is null ? null : await FindOwnTeam(opponentId.Value);
+        if (opponentId is not null && opponent is null)
+        {
+            return NotFound(); // time escolhido que não existe (ou é de outra pessoa): antes virava batalha aleatória
+        }
         if (opponent is not null)
         {
             opponentFighters = BattleSimulator.FromSlots(opponent.Slots);
