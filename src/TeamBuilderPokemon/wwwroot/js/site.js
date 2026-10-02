@@ -98,7 +98,73 @@
     renumber();
   }
 
-  // ---------- copiar link publico ----------
+  // ---------- abrir arquivo de time ----------
+  var teamFile = document.getElementById("team-json-file");
+  async function readTeamFile() {
+    var status = document.getElementById("team-file-status");
+    var file = teamFile.files[0];
+    if (!file) return;
+    if (file.size > 65536) { status.textContent = "O arquivo deve ter até 64 KiB."; return; }
+    try {
+      document.getElementById("team-json").value = await file.text();
+      status.textContent = "Arquivo lido. Use Validar e visualizar antes de confirmar.";
+    } catch { status.textContent = "Não foi possível ler este arquivo."; }
+  }
+  if (teamFile) {
+    teamFile.addEventListener("change", readTeamFile);
+    // O usuário pode escolher o arquivo antes de o script terminar de carregar.
+    if (teamFile.files.length) readTeamFile();
+  }
+
+  document.querySelectorAll("[data-catalog-import]").forEach(function (form) {
+    var busy = false;
+    form.addEventListener("submit", async function (event) {
+      event.preventDefault();
+      if (busy) return;
+      busy = true;
+      var button = form.querySelector("button[type=submit]");
+      var status = form.querySelector("[data-import-status]");
+      button.disabled = true;
+      status.textContent = "Consultando catálogo...";
+      var abort = new AbortController();
+      var timer = setTimeout(function () { abort.abort(); }, 15000);
+      try {
+        var response = await fetch(form.action, { method: "POST", body: new FormData(form), credentials: "same-origin", signal: abort.signal, headers: { Accept: "application/json" } });
+        if (response.redirected) throw new Error("Sua sessão terminou. Entre novamente para importar.");
+        if (!(response.headers.get("content-type") || "").includes("application/json")) throw new Error("O catálogo está indisponível agora.");
+        var result = await response.json();
+        if (!response.ok) throw new Error(result.error || "Não foi possível importar agora.");
+        var pokemon = result.pokemon;
+        var selects = Array.from(document.querySelectorAll('select[data-field="PokemonId"]'));
+        var slotTemplate = document.getElementById("slot-template");
+        if (slotTemplate) selects.push(...slotTemplate.content.querySelectorAll('select[data-field="PokemonId"]'));
+        selects.forEach(function (select) {
+          if (Array.from(select.options).some(function (option) { return Number(option.value) === pokemon.id; })) return;
+          var option = document.createElement("option");
+          option.value = String(pokemon.id);
+          option.textContent = pokemon.name + " (" + pokemon.types.join("/") + ")";
+          select.appendChild(option);
+        });
+        var picker = document.getElementById("team-picker");
+        if (picker && !Array.from(picker.querySelectorAll("[data-id]")).some(function (item) { return Number(item.dataset.id) === pokemon.id; })) {
+          var item = document.createElement("button");
+          item.type = "button"; item.className = "roster-item";
+          item.dataset.id = String(pokemon.id); item.dataset.rosterName = pokemon.name; item.dataset.rosterTypes = pokemon.types.join(" ");
+          item.setAttribute("aria-pressed", "false");
+          var number = document.createElement("span"); number.className = "slot-number";
+          var label = document.createElement("span"); label.className = "d-block fw-semibold small"; label.textContent = pokemon.name;
+          var types = document.createElement("span"); types.textContent = pokemon.types.join("/");
+          item.append(number,label,types); picker.appendChild(item);
+        }
+        status.textContent = result.message;
+      } catch (error) {
+        status.textContent = (error.name === "AbortError" ? "A consulta demorou demais." : error.message) + " Os campos do time continuam preenchidos.";
+      } finally {
+        clearTimeout(timer); busy = false; button.disabled = false;
+      }
+    });
+  });
+
   document.querySelectorAll("[data-copy]").forEach(function (button) {
     button.addEventListener("click", function () {
       var text = button.getAttribute("data-copy");

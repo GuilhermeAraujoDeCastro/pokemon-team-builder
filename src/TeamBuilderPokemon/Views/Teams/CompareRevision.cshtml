@@ -1,0 +1,10 @@
+@model RevisionComparison
+@{ ViewData["Title"] = "Comparar revisão"; }
+<h1>Comparar antes de restaurar</h1>
+<p>As alterações abaixo substituem o time atual pela revisão de @Model.Revision.CreatedAtUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm"). A versão atual ficará no histórico.</p>
+@if(Model.Changes.Any()) { <ul>@foreach(var change in Model.Changes){<li>@change</li>}</ul> }
+else { <p>Os campos desta revisão são iguais aos atuais.</p> }
+<form asp-action="RestoreRevision" asp-route-id="@Model.Team.Id" asp-route-revisionId="@Model.Revision.Id" method="post">
+    <button type="submit" class="btn btn-warning">Restaurar esta revisão</button>
+    <a asp-action="Details" asp-route-id="@Model.Team.Id" class="btn btn-secondary">Cancelar</a>
+</form>

@@ -7,6 +7,7 @@
 <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
     <h1 class="mb-0">Meus times</h1>
     <div class="d-flex gap-2">
+        <a asp-action="ImportTeam" class="btn btn-outline-primary">Importar JSON</a>
         <a asp-action="Trash" class="btn btn-outline-secondary">🗑 Lixeira @(trashCount > 0 ? $"({trashCount})" : "")</a>
         <a asp-action="Create" class="btn btn-danger">+ Novo time</a>
     </div>

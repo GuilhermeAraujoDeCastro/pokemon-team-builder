@@ -1,0 +1,27 @@
+@model ImportTeamViewModel
+@{ ViewData["Title"] = "Importar time JSON"; }
+<h1>Importar time JSON</h1>
+<p>Formato versionado do Team Builder. A prévia não altera seus times. Espécies precisam existir no catálogo.</p>
+@if (Model.Errors.Any()) {
+    <div class="alert alert-danger" role="alert"><ul>@foreach(var error in Model.Errors){<li>@error</li>}</ul></div>
+}
+<form asp-action="PreviewImport" method="post">
+    <label for="team-json-file" class="form-label">Abrir arquivo JSON local</label>
+    <input id="team-json-file" type="file" accept="application/json,.json" class="form-control mb-2" />
+    <p id="team-file-status" role="status" aria-live="polite"></p>
+    <label for="team-json" class="form-label">JSON exportado (até 64 KiB)</label>
+    <textarea id="team-json" name="json" class="form-control" rows="10" maxlength="65536" required>@Model.Json</textarea>
+    <button class="btn btn-primary mt-2" type="submit">Validar e visualizar</button>
+</form>
+@if(Model.Preview is not null){
+    <section class="poke-card p-3 mt-3" aria-label="Prévia do time">
+        <h2>@Model.Preview.Name</h2>
+        <p>Visibilidade: @(Model.Preview.IsPublic == true ? "Público" : "Privado")</p>
+        <ol>@foreach(var slot in Model.Preview.Slots){<li>@slot.Species, nível @slot.Level, apelido: @(slot.Nickname ?? "nenhum")</li>}</ol>
+        <form asp-action="ConfirmImport" method="post">
+            <input type="hidden" name="json" value="@Model.Json" />
+            <button type="submit" class="btn btn-success">Confirmar criação deste time</button>
+        </form>
+    </section>
+}
+<a asp-action="Index" class="btn btn-secondary mt-3">Voltar</a>

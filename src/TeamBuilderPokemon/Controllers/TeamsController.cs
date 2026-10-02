@@ -29,6 +29,52 @@ public class TeamsController : Controller
     }
 
     // GET: /Teams
+    public IActionResult ImportTeam() => View(new ImportTeamViewModel());
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [RequestSizeLimit(100_000)]
+    public async Task<IActionResult> PreviewImport(string json)
+    {
+        var (team, errors) = TeamCodec.Parse(json, await _context.Pokemons.ToListAsync());
+        return View("ImportTeam", new ImportTeamViewModel { Json = json, Preview = errors.Count == 0 ? team : null, Errors = errors });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [RequestSizeLimit(100_000)]
+    public async Task<IActionResult> ConfirmImport(string json)
+    {
+        var catalog = await _context.Pokemons.ToListAsync();
+        var (portable, errors) = TeamCodec.Parse(json,catalog);
+        if (errors.Count != 0 || portable is null)
+            return View("ImportTeam",new ImportTeamViewModel { Json = json, Errors = errors });
+        var team = new Team { Name = portable.Name.Trim(), IsPublic = portable.IsPublic!.Value, UserId = _userManager.GetUserId(User)! };
+        for (var i=0;i<portable.Slots.Count;i++)
+        {
+            var slot=portable.Slots[i];
+            team.Slots.Add(new TeamSlot { SlotNumber=i+1, PokemonId=catalog.Single(p => string.Equals(p.Name,slot.Species,StringComparison.OrdinalIgnoreCase)).Id, Nickname=TeamRules.CleanNickname(slot.Nickname), Level=slot.Level });
+        }
+        _context.Teams.Add(team);
+        await _context.SaveChangesAsync();
+        return RedirectToAction(nameof(Details),new { id=team.Id });
+    }
+
+    public async Task<IActionResult> ExportTeam(int id)
+    {
+        var team=await FindOwnTeam(id);
+        return team is null ? NotFound() : File(System.Text.Encoding.UTF8.GetBytes(TeamCodec.Export(team)),"application/json",$"time-{team.Id}.json");
+    }
+
+    public async Task<IActionResult> CompareRevision(int id,int revisionId)
+    {
+        var team=await FindOwnTeam(id);
+        var revision=await _context.TeamRevisions.SingleOrDefaultAsync(r => r.TeamId == id && r.Id == revisionId);
+        if (team is null || revision is null) return NotFound();
+        var catalog=await _context.Pokemons.ToDictionaryAsync(p => p.Id,p => p.Name);
+        return View(new RevisionComparison(team,revision,RevisionComparer.Compare(team,revision.ReadSnapshot(),catalog)));
+    }
+
     public async Task<IActionResult> Index()
     {
         var userId = _userManager.GetUserId(User);
@@ -83,46 +129,43 @@ public class TeamsController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ImportPokemon(string name, int? teamId)
     {
-        var back = teamId is null ? RedirectToAction(nameof(Create)) : RedirectToAction(nameof(Edit), new { id = teamId });
+        if (teamId is not null && await FindOwnTeam(teamId.Value) is null) return NotFound(new { error = "Time não encontrado." });
         if (string.IsNullOrWhiteSpace(name))
         {
-            TempData["Error"] = "Digite o nome do Pokémon pra buscar na PokeAPI.";
-            return back;
+            return BadRequest(new { error = "Digite o nome do Pokémon para buscar na PokeAPI." });
         }
         if (name.Length > 40) // o maxlength da tela não vale pra POST feito na mão
         {
-            TempData["Error"] = "Nome grande demais. Nenhum Pokémon tem mais de 40 letras.";
-            return back;
+            return BadRequest(new { error = "O nome deve ter até 40 caracteres." });
         }
 
         try
         {
-            var pokemon = await _pokeApi.FetchAsync(name);
+            var normalized = PokeApiClient.NormalizeName(name);
+            var pokemon = await _context.Pokemons.FirstOrDefaultAsync(p => p.Name.ToLower() == normalized);
+            var existing = pokemon is not null;
+            pokemon ??= await _pokeApi.FetchAsync(name);
             if (pokemon is null)
             {
-                TempData["Error"] = $"Não achei \"{name}\" na PokeAPI. Confira a grafia em inglês (ex.: charizard).";
-                return back;
+                return NotFound(new { error = $"Não achei {name} na PokeAPI. Confira a grafia em inglês." });
             }
-            if (await _context.Pokemons.AnyAsync(p => p.Name == pokemon.Name))
+            if (!existing)
             {
-                TempData["Message"] = $"{pokemon.Name} já estava no catálogo.";
-                return back;
+                var found = await _context.Pokemons.FirstOrDefaultAsync(p => p.Name == pokemon.Name);
+                if (found is not null) pokemon = found;
+                else { _context.Pokemons.Add(pokemon); await _context.SaveChangesAsync(); }
             }
-
-            _context.Pokemons.Add(pokemon);
-            await _context.SaveChangesAsync();
-            TempData["Message"] = $"{pokemon.Name} ({string.Join("/", pokemon.GetTypes())}) entrou no catálogo!";
+            return Json(new { message = $"{pokemon.Name} disponível no catálogo. Seu rascunho foi mantido.", pokemon = new { pokemon.Id, pokemon.Name, types = pokemon.GetTypes() } });
         }
         catch (DbUpdateException)
         {
             // Dois pedidos do mesmo Pokémon ao mesmo tempo: o índice único barra o segundo, que não vira erro 500.
-            TempData["Message"] = $"{name.Trim()} já estava no catálogo.";
+            return Conflict(new { error = "O catálogo mudou durante a importação. Tente novamente; seu rascunho está mantido." });
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
         {
-            TempData["Error"] = "A PokeAPI não respondeu agora. Tenta de novo em instantes.";
+            return StatusCode(503,new { error = "A PokeAPI não respondeu agora. Tente novamente em instantes." });
         }
-        return back;
     }
 
     // GET: /Teams/Details/5
@@ -208,11 +251,14 @@ public class TeamsController : Controller
 
         var snapshot = revision.ReadSnapshot();
         var existing = (await _context.Pokemons.Select(p => p.Id).ToListAsync()).ToHashSet();
-        var slots = snapshot.Slots.Where(s => existing.Contains(s.PokemonId)).ToList();
-        if (slots.Count == 0)
+        var slots = snapshot.Slots;
+        var errors = TeamRules.ValidateName(snapshot.Name);
+        errors.AddRange(TeamRules.ValidatePokemonIds(slots.Select(s => s.PokemonId).ToList(), existing));
+        foreach (var slot in slots) errors.AddRange(TeamRules.ValidateSlot(slot.Nickname,slot.Level));
+        if (errors.Count != 0)
         {
-            TempData["Error"] = "Essa versão não tem nenhum Pokémon que ainda exista no catálogo.";
-            return RedirectToAction(nameof(Details), new { id });
+            TempData["Error"] = "Revisão não restaurada: " + string.Join(" ",errors);
+            return RedirectToAction(nameof(CompareRevision), new { id,revisionId });
         }
 
         _context.TeamRevisions.Add(TeamRevision.FromTeam(team));
@@ -336,7 +382,7 @@ public class TeamsController : Controller
     {
         var team = await _context.Teams
             .Include(t => t.Slots).ThenInclude(s => s.Pokemon)
-            .FirstOrDefaultAsync(t => t.Id == id && t.IsPublic && t.DeletedAtUtc == null);
+            .FirstOrDefaultAsync(t => t.Id == id && t.IsPublic && t.DeletedAtUtc == null && t.UserId != null && _context.Users.Any(u => u.Id == t.UserId));
         if (team is null)
         {
             return NotFound();
@@ -351,7 +397,7 @@ public class TeamsController : Controller
     private IQueryable<Team> OwnTeams(string? userId)
     {
         return _context.Teams
-            .Where(t => t.UserId == userId)
+            .Where(t => userId != null && t.UserId != null && t.UserId == userId)
             .Include(t => t.Slots).ThenInclude(s => s.Pokemon);
     }
 
