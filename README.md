@@ -17,7 +17,7 @@ Site em ASP.NET Core onde cada pessoa cria uma conta, monta times de até 6 Pok�
 - Lixeira: time excluído pode ser restaurado ou apagado de vez.
 - Simulação de batalha entre dois times, turno a turno, usando a tabela de tipos e o nível de cada Pokémon.
 - Página pública só leitura pra compartilhar um time.
-- API em JSON: `/api/pokemon`, `/api/teams` e `/api/teams/{id}/analysis` (as duas últimas pedem login).
+- API em JSON: catálogo público em `/api/pokemon`, times da conta em `/api/teams` e análise em `/api/teams/{id}/analysis`. A análise aceita o dono autenticado ou um time público com dono válido.
 - Nomes dos tipos em português na tela e tema claro e escuro (Bootstrap 5.3).
 
 ## Telas
@@ -35,18 +35,18 @@ cd src/TeamBuilderPokemon
 dotnet run
 ```
 
-O banco SQLite (`app.db`) é criado e atualizado sozinho na primeira execução, pelas migrations do projeto. O terminal mostra a URL local, algo como `https://localhost:7xxx`. Crie uma conta e entre em "Meus times".
+O banco SQLite (`app.db`) é criado e atualizado na primeira execução pelas migrations. Antes de usar um banco existente, faça backup e siga o [procedimento de migração e quarentena de donos](docs/owner-migration.md) em uma cópia local. O terminal mostra a URL local, algo como `https://localhost:7xxx`. Crie uma conta e entre em "Meus times".
 
 A confirmação de cadastro por e-mail vem desligada. Pra ligar, coloque `"Email": { "RequireConfirmedAccount": true }` no `appsettings.json`. Os e-mails não são enviados de verdade: viram arquivos `.html` em `App_Data/emails`, o que dispensa conta em provedor de e-mail. Pra usar em produção, troque o `FileEmailSender` por SendGrid ou SMTP.
 
-Se mudar os modelos e precisar de uma migration nova:
+Se mudar os modelos e precisar de uma migration nova, execute os comandos a partir da raiz do repositório. Defina antes `ConnectionStrings__DefaultConnection` para o banco local de design, conforme `.env.example` e o guia de migração:
 
 ```bash
 dotnet tool restore
 dotnet ef migrations add NomeDaMudanca --project src/TeamBuilderPokemon
 ```
 
-O GitHub Actions compila o projeto a cada push.
+O GitHub Actions compila o projeto e executa as regressões em SQLite a cada push.
 
 ## Arquitetura
 
@@ -72,6 +72,20 @@ src/TeamBuilderPokemon/
 ## O que eu treinei com esse projeto
 
 ASP.NET Core MVC com ASP.NET Core Identity, Entity Framework Core com SQLite e seed por `HasData`, e um relacionamento muitos-para-muitos com dados extras (posição, apelido e nível) modelado como entidade própria. Também portei a mesma lógica de domínio, a tabela de tipos, de Python pra C#, mantendo os dois lados consistentes.
+
+## Importação, revisões e dados da conta
+
+"Importar JSON" em Meus times aceita o formato versionado do projeto. A prévia mostra nome, membros, níveis, apelidos e visibilidade. Nada é salvo até a confirmação; o servidor valida novamente todo o conteúdo antes de criar um time. "Exportar JSON" nos detalhes permite voltar com os mesmos campos. Espécies desconhecidas precisam entrar no catálogo antes dessa importação. O formato Showdown não está implementado.
+
+Importar uma espécie na tela de criação ou edição atualiza o catálogo sem navegar para outra página. Nome, seleções, níveis, apelidos e visibilidade do rascunho continuam preenchidos. Falhas da PokeAPI aparecem no próprio formulário.
+
+O histórico abre uma comparação por nome, visibilidade e slot antes da restauração. Restaurar mantém uma revisão da versão substituída. O download dos dados pessoais do Identity inclui times e histórico; a exclusão explícita da conta remove esses dados por chave estrangeira. Times antigos sem dono válido ficam em quarentena privada, com seus dados preservados para revisão local.
+
+```bash
+dotnet run --project tests/RegressionTests -c Release
+```
+
+Os testes usam SQLite em memória e chamadas simuladas da PokeAPI. Consulte [migração, configuração e limites dos testes](docs/owner-migration.md) antes de trabalhar com progresso existente.
 
 ## Créditos e avisos
 
